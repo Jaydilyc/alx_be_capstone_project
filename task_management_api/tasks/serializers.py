@@ -27,3 +27,19 @@ class TaskSerializer(serializers.ModelSerializer):
         if value <= timezone.now():
             raise serializers.ValidationError("Due date must be in the future.")
         return value
+
+    def validate(self, attrs):
+        instance = getattr(self, 'instance', None)
+
+        if instance and instance.status == Task.StatusChoices.COMPLETED:
+            incoming_status = attrs.get('status', instance.status)
+
+            editable_fields = ['title', 'description', 'due_date', 'priority', 'project']
+            tried_to_edit_protected_field = any(field in attrs for field in editable_fields)
+
+            if incoming_status == Task.StatusChoices.COMPLETED and tried_to_edit_protected_field:
+                raise serializers.ValidationError(
+                    "Completed tasks cannot be edited unless marked incomplete first."
+                )
+
+        return attrs
