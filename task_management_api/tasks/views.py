@@ -15,7 +15,31 @@ class TaskViewSet(viewsets.ModelViewSet):
     permission_classes = [permissions.IsAuthenticated]
 
     def get_queryset(self):
-        return Task.objects.filter(owner=self.request.user)
+        queryset = Task.objects.filter(owner=self.request.user)
+
+        status_param = self.request.query_params.get('status')
+        priority_param = self.request.query_params.get('priority')
+        project_param = self.request.query_params.get('project')
+        due_date_param = self.request.query_params.get('due_date')
+        ordering_param = self.request.query_params.get('ordering')
+
+        if status_param:
+            queryset = queryset.filter(status=status_param)
+
+        if priority_param:
+            queryset = queryset.filter(priority=priority_param)
+
+        if project_param:
+            queryset = queryset.filter(project_id=project_param)
+
+        if due_date_param:
+            queryset = queryset.filter(due_date__date=due_date_param)
+
+        allowed_ordering = ['due_date', '-due_date', 'priority', '-priority', 'created_at', '-created_at']
+        if ordering_param in allowed_ordering:
+            queryset = queryset.order_by(ordering_param)
+
+        return queryset
 
     def perform_create(self, serializer):
         serializer.save(owner=self.request.user)
