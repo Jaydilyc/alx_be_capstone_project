@@ -8,11 +8,12 @@ from rest_framework.response import Response
 
 from .models import Task
 from .serializers import TaskSerializer
+from .permissions import IsTaskOwner
 
 
 class TaskViewSet(viewsets.ModelViewSet):
     serializer_class = TaskSerializer
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.IsAuthenticated, IsTaskOwner]
 
     def get_queryset(self):
         queryset = Task.objects.filter(owner=self.request.user)
